@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Google Maps API Test</title>
+    <style>
+        #map { height: 400px; width: 100%; }
+        .info { padding: 20px; font-family: Arial, sans-serif; }
+        .error { color: red; }
+        .success { color: green; }
+    </style>
+</head>
+<body>
+    <div class="info">
+        <h1>Google Maps API Test</h1>
+        <p>This page tests if your Google Maps API key is working correctly.</p>
+        <div id="status">Loading...</div>
+    </div>
+    
+    <div id="map"></div>
+    
+    <div class="info">
+        <h3>If the map doesn't load, you may need to:</h3>
+        <ol>
+            <li>Enable the following APIs in Google Cloud Console:
+                <ul>
+                    <li>Maps JavaScript API</li>
+                    <li>Directions API</li>
+                </ul>
+            </li>
+            <li>Check API key restrictions (if any)</li>
+            <li>Verify billing is enabled (Google Maps requires billing)</li>
+        </ol>
+        
+        <p><strong>Your API Key:</strong> <span id="apikey">Loading...</span></p>
+    </div>
+
+    <script>
+        let map;
+        
+        async function loadApiKey() {
+            try {
+                const response = await fetch('get_config.php');
+                const config = await response.json();
+                document.getElementById('apikey').textContent = config.google_maps_api_key;
+                return config.google_maps_api_key;
+            } catch (error) {
+                document.getElementById('apikey').textContent = 'Failed to load';
+                return 'AIzaSyB44qDE8Zm9tHN-H4FYvSVaTjiPr1UPbp8';
+            }
+        }
+        
+        async function initMap() {
+            const apiKey = await loadApiKey();
+            
+            // Load Google Maps API
+            const script = document.createElement('script');
+            script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&callback=createMap`;
+            script.onerror = () => {
+                document.getElementById('status').innerHTML = '<span class="error">❌ Failed to load Google Maps API script</span>';
+            };
+            document.head.appendChild(script);
+        }
+        
+        window.createMap = function() {
+            try {
+                map = new google.maps.Map(document.getElementById("map"), {
+                    zoom: 14,
+                    center: { lat: 14.1171, lng: 122.9525 }, // CNSC coordinates
+                });
+                
+                // Add a marker
+                new google.maps.Marker({
+                    position: { lat: 14.1171, lng: 122.9525 },
+                    map: map,
+                    title: 'CNSC Main Campus'
+                });
+                
+                document.getElementById('status').innerHTML = '<span class="success">✅ Google Maps loaded successfully!</span>';
+            } catch (error) {
+                document.getElementById('status').innerHTML = `<span class="error">❌ Error creating map: ${error.message}</span>`;
+            }
+        };
+        
+        // Initialize when page loads
+        initMap();
+    </script>
+</body>
+</html>

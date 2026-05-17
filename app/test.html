@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>EcoMate - Test Page</title>
+</head>
+<body>
+    <h1>EcoMate Test Page</h1>
+    <p>If you can see this, the web server is working correctly.</p>
+    
+    <h2>Test Links:</h2>
+    <ul>
+        <li><a href="login.html">Login Page</a></li>
+        <li><a href="index.html">Main App (requires login)</a></li>
+        <li><a href="index-nomap.html">Main App without Google Maps (for testing)</a></li>
+        <li><a href="test-maps.html">Google Maps API Test</a></li>
+        <li><a href="whoami.php">Auth Status (JSON)</a></li>
+        <li><a href="get_bins.php">Bins Data (JSON)</a></li>
+        <li><a href="get_config.php">Config (JSON)</a></li>
+    </ul>
+    
+    <h2>Quick Login Test:</h2>
+    <form action="login.php" method="POST">
+        <input type="text" name="username" value="admin" placeholder="Username">
+        <input type="password" name="password" value="admin123" placeholder="Password">
+        <button type="submit">Test Login</button>
+    </form>
+</body>
+</html>

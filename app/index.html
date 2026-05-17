@@ -1,0 +1,1536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoMate Command Center</title>
+    <style>
+        * { box-sizing: border-box; }
+        html, body { 
+            font-family: 'Segoe UI', sans-serif; 
+            margin: 0; 
+            padding: 0;
+            height: 100%; 
+            overflow: hidden; 
+            transition: all 0.3s ease;
+        }
+        body { 
+            display: flex; 
+            height: 100vh; 
+        }
+
+        /* Theme Variables */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-panel: #002d5e;
+            --text-primary: #333333;
+            --text-secondary: #666666;
+            --text-light: #ffffff;
+            --border-color: #ddd;
+            --accent-color: #00897b;
+            --card-bg: #f9f9f9;
+            --shadow: rgba(0,0,0,0.1);
+            --dashboard-bg: rgba(255, 255, 255, 0.95);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2d2d2d;
+            --bg-panel: #1e3a5f;
+            --text-primary: #ffffff;
+            --text-secondary: #cccccc;
+            --text-light: #ffffff;
+            --border-color: #444;
+            --accent-color: #4db6ac;
+            --card-bg: #333333;
+            --shadow: rgba(0,0,0,0.3);
+            --dashboard-bg: rgba(45, 45, 45, 0.95);
+        }
+        
+        [data-theme="dark"] .form-input {
+            background: rgba(255,255,255,0.05);
+            border-color: rgba(255,255,255,0.2);
+            color: var(--text-light);
+        }
+        
+        [data-theme="dark"] .form-input:focus {
+            background: rgba(255,255,255,0.1);
+            border-color: var(--accent-color);
+        }
+        
+        [data-theme="dark"] .form-input::placeholder {
+            color: rgba(255,255,255,0.5);
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+        }
+        
+        /* User Info Section */
+        .user-section {
+            padding: 20px;
+            background: linear-gradient(135deg, var(--bg-panel), #1e4a6b);
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-light);
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+        
+        .user-details {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-color), #4db6ac);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 16px;
+            color: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        
+        .user-text {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .user-name {
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 2px;
+        }
+        
+        .user-role {
+            font-size: 12px;
+            opacity: 0.8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .logout-btn {
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: var(--text-light);
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .logout-btn:hover {
+            background: rgba(255,255,255,0.25);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        
+        /* Add Bin Form */
+        .add-bin-section {
+            background: rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 16px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .add-bin-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+            font-weight: bold;
+            font-size: 13px;
+            color: var(--text-light);
+        }
+        
+        .form-group {
+            margin-bottom: 12px;
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 8px;
+            background: rgba(255,255,255,0.1);
+            color: var(--text-light);
+            font-size: 13px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+        
+        .form-input::placeholder {
+            color: rgba(255,255,255,0.6);
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            background: rgba(255,255,255,0.15);
+            box-shadow: 0 0 0 2px rgba(77, 182, 172, 0.2);
+        }
+        
+        .add-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, var(--accent-color), #4db6ac);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .add-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 137, 123, 0.3);
+        }
+        
+        .add-btn:active {
+            transform: translateY(0);
+        }
+        #side-panel { 
+            width: 350px; 
+            background: var(--bg-primary); 
+            border-right: 1px solid var(--border-color); 
+            display: flex; 
+            flex-direction: column; 
+            z-index: 20; 
+            box-shadow: 2px 0 10px var(--shadow); 
+            transition: all 0.3s ease;
+        }
+        .panel-header { 
+            background: var(--bg-panel); 
+            color: var(--text-light); 
+            padding: 20px; 
+            font-weight: bold; 
+            font-size: 18px; 
+            position: relative;
+        }
+        
+        /* Theme Toggle Button */
+        .theme-toggle {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: var(--text-light);
+            padding: 8px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+        .theme-toggle:hover {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.05);
+        }
+
+        #bin-list { 
+            flex: 1; 
+            overflow-y: auto; 
+            padding: 15px; 
+            background: var(--bg-primary);
+        }
+        
+        .bin-card { 
+            background: var(--card-bg); 
+            border: 1px solid var(--border-color); 
+            border-radius: 12px; 
+            padding: 15px; 
+            margin-bottom: 15px; 
+            transition: all 0.3s ease; 
+            position: relative;
+            overflow: hidden;
+        }
+        .bin-card:hover { 
+            border-color: var(--accent-color); 
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px var(--shadow);
+        }
+        .bin-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--accent-color);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .bin-card:hover::before {
+            opacity: 1;
+        }
+        
+        .bin-name { 
+            font-weight: bold; 
+            color: var(--text-primary); 
+            margin-bottom: 12px; 
+            display: block; 
+            font-size: 14px;
+        }
+        .controls { 
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+        }
+        
+        input[type="range"] { 
+            flex: 1; 
+            cursor: pointer; 
+            accent-color: var(--accent-color); 
+        }
+        .update-btn { 
+            background: var(--accent-color); 
+            color: white; 
+            border: none; 
+            padding: 8px 12px; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-size: 12px; 
+            transition: all 0.3s ease;
+        }
+        .update-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        /* Map & Dashboard */
+        #main-view { 
+            flex: 1; 
+            position: relative; 
+            display: flex; 
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            background: var(--bg-secondary);
+        }
+        #map { 
+            flex: 1;
+            width: 100%; 
+            height: calc(100vh - 0px);
+            min-width: 300px;
+            min-height: 400px;
+            background: var(--bg-secondary);
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        #dashboard {
+            position: absolute; 
+            top: 20px; 
+            right: 20px; 
+            z-index: 10;
+            background: var(--dashboard-bg); 
+            backdrop-filter: blur(10px);
+            padding: 20px; 
+            border-radius: 16px;
+            box-shadow: 0 8px 25px var(--shadow); 
+            width: 280px;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .dashboard-title {
+            font-weight: bold;
+            color: var(--text-primary);
+            font-size: 16px;
+        }
+        .export-btn {
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 11px;
+            transition: all 0.3s ease;
+        }
+        .export-btn:hover {
+            transform: scale(1.05);
+        }
+        
+        .stat-item { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            margin-bottom: 12px; 
+            font-size: 14px; 
+            padding: 8px 0;
+        }
+        .stat-label {
+            color: var(--text-secondary);
+        }
+        .value { 
+            font-weight: bold; 
+            color: var(--accent-color); 
+            font-size: 15px;
+        }
+        
+        /* Progress bars for visual appeal */
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: var(--border-color);
+            border-radius: 3px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-color), #4db6ac);
+            border-radius: 3px;
+            transition: width 0.5s ease;
+        }
+        
+        .map-controls {
+            position: absolute; 
+            bottom: 20px; 
+            right: 20px; 
+            z-index: 10;
+            display: flex;
+            gap: 10px;
+        }
+        .resize-btn, .control-btn {
+            background: var(--dashboard-bg);
+            backdrop-filter: blur(10px);
+            border: 2px solid var(--accent-color);
+            padding: 12px 18px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: bold;
+            color: var(--accent-color);
+            box-shadow: 0 4px 15px var(--shadow);
+            transition: all 0.3s ease;
+        }
+        .resize-btn:hover, .control-btn:hover {
+            background: var(--accent-color);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px var(--shadow);
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loadingScreen" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #f8f9fa; display: flex; align-items: center; justify-content: center; z-index: 1000;">
+        <div style="text-align: center;">
+            <div style="border: 4px solid #f3f3f3; border-top: 4px solid #00897b; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 0 auto 20px;"></div>
+            <h2 style="color: #002d5e; margin-bottom: 10px;">EcoMate</h2>
+            <p style="color: #666;">Loading Command Center...</p>
+        </div>
+    </div>
+
+    <!-- Main Application (hidden initially) -->
+    <div id="mainApp" style="display: none;">
+
+    <div id="side-panel">
+        <!-- User Info Section -->
+        <div class="user-section">
+            <div class="user-info">
+                <div class="user-details">
+                    <div class="user-avatar" id="userAvatar">A</div>
+                    <div class="user-text">
+                        <div class="user-name" id="userName">Loading...</div>
+                        <div class="user-role" id="userRole">User</div>
+                    </div>
+                </div>
+                <button class="logout-btn" onclick="logoutNow()" title="Sign out of EcoMate">
+                    <span>🚪</span> Logout
+                </button>
+            </div>
+
+            <!-- Add Bin Form (Admin Only) -->
+            <div class="add-bin-section" id="addBinSection" style="display:none;">
+                <div class="add-bin-header">
+                    <span>📍</span> Add New Collection Point
+                </div>
+                <div class="form-group">
+                    <input type="text" id="new-name" class="form-input" placeholder="Location Name (e.g., City Hall)" maxlength="50">
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <input type="text" id="new-lat" class="form-input" placeholder="Latitude" pattern="[0-9.-]+">
+                        <input type="text" id="new-lng" class="form-input" placeholder="Longitude" pattern="[0-9.-]+">
+                    </div>
+                </div>
+                <button class="add-btn" onclick="createBin()">
+                    <span>➕</span> Add Collection Point
+                </button>
+            </div>
+        </div>
+    <div class="panel-header">
+        EcoMate Controller
+        <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark/light theme">🌓</button>
+    </div>
+    <div id="bin-list">
+        <p style="color: #666; font-size: 14px;">Connecting to System A...</p>
+    </div>
+</div>
+
+<div id="main-view">
+    <div id="dashboard">
+        <div class="dashboard-header">
+            <span class="dashboard-title">📊 System Overview</span>
+            <button class="export-btn" onclick="exportData()" title="Export data to CSV">📥 Export</button>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">Distance:</span> 
+            <span id="dist" class="value">-- km</span>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="dist-progress" style="width: 0%"></div>
+        </div>
+        
+        <div class="stat-item">
+            <span class="stat-label">CO2 Saved:</span> 
+            <span id="co2" class="value">0.00 kg</span>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="co2-progress" style="width: 0%"></div>
+        </div>
+        
+        <div class="stat-item">
+            <span class="stat-label">Status:</span> 
+            <span id="capacity" class="value">Syncing...</span>
+        </div>
+        
+        <div class="stat-item">
+            <span class="stat-label">Active Bins:</span> 
+            <span id="active-bins" class="value">0</span>
+        </div>
+        
+        <div class="stat-item">
+            <span class="stat-label">Avg Fill Level:</span> 
+            <span id="avg-fill" class="value">0%</span>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="fill-progress" style="width: 0%"></div>
+        </div>
+    </div>
+    <div class="map-controls">
+        <button class="control-btn" onclick="toggleTheme()" title="Switch between light and dark theme">🌓 Theme</button>
+        <button class="resize-btn" onclick="resizeMap()" title="Fix map display and sizing issues">🗺️ Fix Map</button>
+    </div>
+    <div id="map"></div>
+</div>
+
+</div> <!-- End mainApp -->
+
+<style>
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    @keyframes slideDown {
+        from { transform: translateX(-50%) translateY(-100%); opacity: 0; }
+        to { transform: translateX(-50%) translateY(0); opacity: 1; }
+    }
+    
+    @keyframes slideUp {
+        from { transform: translateX(-50%) translateY(0); opacity: 1; }
+        to { transform: translateX(-50%) translateY(-100%); opacity: 0; }
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Mobile Responsive Design */
+    @media (max-width: 768px) {
+        body { flex-direction: column; }
+        
+        #side-panel { 
+            width: 100%; 
+            height: 300px; 
+            border-right: none;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        #main-view { 
+            height: calc(100vh - 300px); 
+        }
+        
+        #dashboard {
+            position: relative;
+            top: 10px;
+            right: 10px;
+            width: calc(100% - 20px);
+            margin-bottom: 10px;
+        }
+        
+        .map-controls {
+            bottom: 10px;
+            right: 10px;
+            flex-direction: column;
+        }
+        
+        .theme-toggle {
+            position: static;
+            margin-left: 10px;
+            display: inline-block;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .panel-header {
+            font-size: 16px;
+            padding: 15px;
+        }
+        
+        .bin-card {
+            padding: 12px;
+            margin-bottom: 10px;
+        }
+        
+        .dashboard-title {
+            font-size: 14px;
+        }
+        
+        .stat-item {
+            font-size: 13px;
+        }
+    }
+    
+    /* Loading animations */
+    .loading-fade {
+        animation: fadeIn 0.5s ease;
+    }
+</style>
+
+<script>
+    let map, directionsService, directionsRenderer, markers = [];
+let googleMapsApiKey = '';
+let currentUser = null;
+
+async function loadConfig() {
+    try {
+        console.log('Loading config...');
+        const response = await fetch('get_config.php');
+        
+        if (!response.ok) {
+            throw new Error(`Config fetch failed: ${response.status}`);
+        }
+        
+        const config = await response.json();
+        
+        if (!config.google_maps_api_key || config.google_maps_api_key === 'YOUR_API_KEY_HERE') {
+            throw new Error('Google Maps API key not configured');
+        }
+        
+        googleMapsApiKey = config.google_maps_api_key;
+        console.log('Config loaded successfully, API key length:', googleMapsApiKey.length);
+        return config;
+    } catch (error) {
+        console.error('Failed to load config:', error);
+        // Fallback to hardcoded key if config fails
+        googleMapsApiKey = 'AIzaSyB44qDE8Zm9tHN-H4FYvSVaTjiPr1UPbp8';
+        console.log('Using fallback API key');
+        return { google_maps_api_key: googleMapsApiKey };
+    }
+}
+
+// Theme Management
+function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    
+    // Add smooth transition effect
+    document.body.style.transition = 'all 0.3s ease';
+    setTimeout(() => {
+        document.body.style.transition = '';
+    }, 300);
+    
+    console.log('Theme switched to:', newTheme);
+}
+
+// Load saved theme on page load
+function loadSavedTheme() {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+}
+
+// Export functionality
+function exportData() {
+    try {
+        // Get current data
+        const distance = document.getElementById('dist').textContent;
+        const co2 = document.getElementById('co2').textContent;
+        const status = document.getElementById('capacity').textContent;
+        const activeBins = document.getElementById('active-bins').textContent;
+        const avgFill = document.getElementById('avg-fill').textContent;
+        
+        // Create CSV content
+        const csvContent = [
+            ['Metric', 'Value', 'Timestamp'],
+            ['Distance', distance, new Date().toISOString()],
+            ['CO2 Saved', co2, new Date().toISOString()],
+            ['Status', status, new Date().toISOString()],
+            ['Active Bins', activeBins, new Date().toISOString()],
+            ['Average Fill Level', avgFill, new Date().toISOString()]
+        ].map(row => row.join(',')).join('\n');
+        
+        // Create and download file
+        const blob = new Blob([csvContent], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `ecomate-report-${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        
+        // Show success notification
+        showNotification('📊 Data exported successfully!', 'success');
+    } catch (error) {
+        console.error('Export failed:', error);
+        showNotification('❌ Export failed. Please try again.', 'error');
+    }
+}
+
+// Enhanced notification system
+function showNotification(message, type = 'info') {
+    // Remove existing notifications
+    const existing = document.querySelector('.notification');
+    if (existing) existing.remove();
+    
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.innerHTML = `
+        <div style="
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: ${type === 'success' ? '#4caf50' : type === 'error' ? '#f44336' : '#2196f3'};
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 1000;
+            font-weight: bold;
+            animation: slideDown 0.3s ease;
+        ">
+            ${message}
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Auto remove after 3 seconds
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.style.animation = 'slideUp 0.3s ease';
+            setTimeout(() => notification.remove(), 300);
+        }
+    }, 3000);
+}
+
+// Enhanced data visualization updates
+function updateDashboardMetrics(bins) {
+    const activeBins = bins.filter(b => b.fill_level > 50);
+    const totalBins = bins.length;
+    const avgFillLevel = totalBins > 0 ? Math.round(bins.reduce((sum, bin) => sum + bin.fill_level, 0) / totalBins) : 0;
+    
+    // Update active bins count
+    document.getElementById('active-bins').textContent = activeBins.length;
+    
+    // Update average fill level
+    document.getElementById('avg-fill').textContent = avgFillLevel + '%';
+    
+    // Update progress bars with animation
+    setTimeout(() => {
+        document.getElementById('fill-progress').style.width = avgFillLevel + '%';
+    }, 100);
+}
+async function checkAuthentication() {
+    try {
+        console.log('Checking authentication...');
+        const response = await fetch('whoami.php');
+        
+        if (!response.ok) {
+            console.log('Auth check failed - response not ok:', response.status);
+            // Redirect to login page
+            window.location.replace('login.html');
+            return false;
+        }
+        
+        const data = await response.json();
+        console.log('Auth response:', data);
+        
+        if (!data || !data.authenticated) {
+            console.log('Not authenticated, redirecting to login');
+            // Redirect to login page
+            window.location.replace('login.html');
+            return false;
+        }
+        
+        currentUser = data.user;
+        console.log('Authenticated as:', currentUser);
+        return true;
+    } catch (error) {
+        console.error('Auth check failed:', error);
+        // Redirect to login page
+        window.location.replace('login.html');
+        return false;
+    }
+}
+
+async function initMap() {
+    // Wait for Google Maps to be fully available
+    if (!window.google || !window.google.maps || !window.google.maps.Map) {
+        throw new Error('Google Maps API not loaded properly');
+    }
+    
+    console.log('Initializing Google Maps...');
+    
+    try {
+        // Get the map container
+        const mapContainer = document.getElementById("map");
+        if (!mapContainer) {
+            throw new Error('Map container not found');
+        }
+        
+        // Force explicit dimensions before creating the map
+        const sidePanel = document.getElementById("side-panel");
+        const sidePanelWidth = sidePanel ? sidePanel.offsetWidth : 350;
+        const availableWidth = window.innerWidth - sidePanelWidth;
+        const availableHeight = window.innerHeight;
+        
+        const mainView = document.getElementById("main-view");
+        if (mainView) {
+            mainView.style.width = availableWidth + 'px';
+            mainView.style.height = availableHeight + 'px';
+        }
+        
+        mapContainer.style.width = availableWidth + 'px';
+        mapContainer.style.height = availableHeight + 'px';
+        
+        console.log('Creating map with explicit dimensions:', {
+            width: availableWidth,
+            height: availableHeight
+        });
+        
+        console.log('Creating map instance...');
+        
+        // Debug: Check container dimensions
+        const containerRect = mapContainer.getBoundingClientRect();
+        console.log('Map container dimensions:', {
+            width: containerRect.width,
+            height: containerRect.height,
+            visible: containerRect.width > 0 && containerRect.height > 0
+        });
+        
+        // Setup the Map Base
+        map = new google.maps.Map(mapContainer, {
+            zoom: 14,
+            center: { lat: 14.1171, lng: 122.9525 },
+            styles: [{ "featureType": "poi", "stylers": [{ "visibility": "off" }] }],
+            mapTypeControl: true,
+            streetViewControl: true,
+            fullscreenControl: true
+        });
+
+        console.log('Map created, setting up directions...');
+
+        directionsService = new google.maps.DirectionsService();
+        directionsRenderer = new google.maps.DirectionsRenderer({ 
+            map: map, 
+            suppressMarkers: true,
+            polylineOptions: { strokeColor: "#00897b", strokeWeight: 5 }
+        });
+
+        console.log('Google Maps initialized successfully');
+        
+        // Trigger a resize to ensure the map renders properly
+        setTimeout(() => {
+            if (map && window.google && window.google.maps) {
+                // Force explicit dimensions again
+                const sidePanel = document.getElementById("side-panel");
+                const sidePanelWidth = sidePanel ? sidePanel.offsetWidth : 350;
+                const availableWidth = window.innerWidth - sidePanelWidth;
+                const availableHeight = window.innerHeight;
+                
+                const mainView = document.getElementById("main-view");
+                const mapContainer = document.getElementById("map");
+                
+                if (mainView && mapContainer) {
+                    mainView.style.width = availableWidth + 'px';
+                    mainView.style.height = availableHeight + 'px';
+                    mapContainer.style.width = availableWidth + 'px';
+                    mapContainer.style.height = availableHeight + 'px';
+                    
+                    // Force reflow
+                    mapContainer.offsetHeight;
+                }
+                
+                // Then resize the map
+                setTimeout(() => {
+                    google.maps.event.trigger(map, 'resize');
+                    map.setCenter({ lat: 14.1171, lng: 122.9525 });
+                    console.log('Initial map resize completed');
+                }, 50);
+            }
+        }, 300);
+        
+        // Load initial data
+        refreshData();
+        
+        // Add window resize listener to handle console open/close and window resizing
+        window.addEventListener('resize', () => {
+            if (map && window.google && window.google.maps) {
+                // Debounce the resize to avoid too many calls
+                clearTimeout(window.mapResizeTimeout);
+                window.mapResizeTimeout = setTimeout(() => {
+                    // Calculate new dimensions
+                    const sidePanel = document.getElementById("side-panel");
+                    const sidePanelWidth = sidePanel ? sidePanel.offsetWidth : 350;
+                    const availableWidth = window.innerWidth - sidePanelWidth;
+                    const availableHeight = window.innerHeight;
+                    
+                    const mapContainer = document.getElementById("map");
+                    const mainView = document.getElementById("main-view");
+                    
+                    if (mapContainer && mainView) {
+                        // Set explicit dimensions
+                        mainView.style.width = availableWidth + 'px';
+                        mainView.style.height = availableHeight + 'px';
+                        mapContainer.style.width = availableWidth + 'px';
+                        mapContainer.style.height = availableHeight + 'px';
+                        
+                        // Force reflow
+                        mapContainer.offsetHeight;
+                        
+                        setTimeout(() => {
+                            google.maps.event.trigger(map, 'resize');
+                            map.setCenter({ lat: 14.1171, lng: 122.9525 });
+                            console.log('Map auto-resized to:', { width: availableWidth, height: availableHeight });
+                        }, 50);
+                    }
+                }, 250); // Wait 250ms after resize stops
+            }
+        });
+        
+        // Use ResizeObserver to watch the map container directly
+        if (window.ResizeObserver) {
+            const resizeObserver = new ResizeObserver(entries => {
+                if (map && window.google && window.google.maps) {
+                    // Debounce the resize
+                    clearTimeout(window.mapContainerResizeTimeout);
+                    window.mapContainerResizeTimeout = setTimeout(() => {
+                        const entry = entries[0];
+                        if (entry && entry.contentRect.width > 0 && entry.contentRect.height > 0) {
+                            google.maps.event.trigger(map, 'resize');
+                            map.setCenter({ lat: 14.1171, lng: 122.9525 });
+                            console.log('Map resized due to container size change:', {
+                                width: entry.contentRect.width,
+                                height: entry.contentRect.height
+                            });
+                        }
+                    }, 100);
+                }
+            });
+            resizeObserver.observe(mapContainer);
+        }
+        
+        // Also add a periodic check as fallback
+        setInterval(() => {
+            if (map && window.google && window.google.maps) {
+                const currentRect = mapContainer.getBoundingClientRect();
+                if (currentRect.width > 0 && currentRect.height > 0) {
+                    // Only trigger resize if dimensions seem reasonable
+                    if (currentRect.width > 200 && currentRect.height > 200) {
+                        google.maps.event.trigger(map, 'resize');
+                    }
+                }
+            }
+        }, 2000); // Check every 2 seconds
+        
+    } catch (error) {
+        console.error('Error in initMap:', error);
+        throw error; // Re-throw to be caught by the caller
+    }
+}
+
+async function logoutNow() {
+    try {
+        await fetch('logout.php', { method: 'POST' });
+    } catch (error) {
+        console.error('Logout error:', error);
+    }
+    // Always redirect to login page after logout attempt
+    window.location.replace('login.html');
+}
+
+function resizeMap() {
+    console.log('Manual resize triggered');
+    
+    if (!map || !window.google || !window.google.maps) {
+        console.log('Map not available for resize');
+        return;
+    }
+    
+    const mapContainer = document.getElementById("map");
+    const mainView = document.getElementById("main-view");
+    
+    if (!mapContainer || !mainView) {
+        console.log('Map containers not found');
+        return;
+    }
+    
+    // Get the actual available space
+    const sidePanel = document.getElementById("side-panel");
+    const sidePanelWidth = sidePanel ? sidePanel.offsetWidth : 350;
+    const availableWidth = window.innerWidth - sidePanelWidth;
+    const availableHeight = window.innerHeight;
+    
+    console.log('Available space:', { width: availableWidth, height: availableHeight });
+    
+    // Force explicit dimensions
+    mainView.style.width = availableWidth + 'px';
+    mainView.style.height = availableHeight + 'px';
+    mapContainer.style.width = availableWidth + 'px';
+    mapContainer.style.height = availableHeight + 'px';
+    
+    // Force a reflow
+    mapContainer.offsetHeight;
+    
+    // Wait a moment then trigger Google Maps resize
+    setTimeout(() => {
+        google.maps.event.trigger(map, 'resize');
+        map.setCenter({ lat: 14.1171, lng: 122.9525 });
+        
+        // Log final dimensions
+        const finalRect = mapContainer.getBoundingClientRect();
+        console.log('Map resized to:', {
+            width: finalRect.width,
+            height: finalRect.height,
+            windowSize: { width: window.innerWidth, height: window.innerHeight }
+        });
+    }, 100);
+}
+
+function initializeUI() {
+    // Update user info in the UI
+    const userName = document.getElementById('userName');
+    const userRole = document.getElementById('userRole');
+    const userAvatar = document.getElementById('userAvatar');
+    
+    if (currentUser) {
+        userName.textContent = currentUser.username;
+        userRole.textContent = currentUser.role.toUpperCase();
+        
+        // Set avatar initial (first letter of username)
+        userAvatar.textContent = currentUser.username.charAt(0).toUpperCase();
+        
+        // Show/hide admin controls based on role
+        const addBinSection = document.getElementById('addBinSection');
+        if (currentUser.role === 'admin') {
+            addBinSection.style.display = 'block';
+        } else {
+            addBinSection.style.display = 'none';
+        }
+    }
+}
+
+
+async function refreshData() {
+    console.log("Fetching fresh data from get_bins.php...");
+    try {
+        const response = await fetch('get_bins.php');
+        const data = await response.json();
+        console.log("Data received:", data);
+
+        if (!data || data.status !== 'success') {
+            throw new Error(data?.message || 'Failed to fetch bins');
+        }
+
+        const bins = data.bins || [];
+
+        if (bins.length === 0) {
+            document.getElementById('bin-list').innerHTML = "<p>No bins found in database.</p>";
+            return;
+        }
+
+        loadAdminControls(bins);
+        updateLogistics(bins);
+    } catch (err) {
+        console.error("Critical Error fetching bins:", err);
+        document.getElementById('bin-list').innerHTML = "<p style='color:red'>Connection Failed</p>";
+    }
+}
+
+function loadAdminControls(bins) {
+    const list = document.getElementById('bin-list');
+    list.innerHTML = "";
+
+    const isAdmin = currentUser && currentUser.role === 'admin';
+
+    bins.forEach(bin => {
+        const card = document.createElement('div');
+        card.className = 'bin-card';
+
+        const canEdit = isAdmin;
+        const deleteBtn = canEdit
+            ? `<button onclick="deleteBin(${bin.id})" style="background:none; border:none; color:red; cursor:pointer; font-size:16px;">&times;</button>`
+            : `<span style="color:#bbb;font-size:16px;">×</span>`;
+
+        const updateBtn = canEdit
+            ? `<button class="update-btn" onclick="updateBin(${bin.id})">Update</button>`
+            : `<button class="update-btn" style="opacity:0.4; cursor:not-allowed;" disabled>Update</button>`;
+
+        card.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span class="bin-name">${bin.location_name}</span>
+                ${deleteBtn}
+            </div>
+            <div class="controls">
+                <input type="range" id="range-${bin.id}" min="0" max="100" value="${bin.fill_level}" ${canEdit ? '' : 'disabled'}>
+                <span id="val-${bin.id}" style="font-size:12px;">${bin.fill_level}%</span>
+                ${updateBtn}
+            </div>
+        `;
+
+        const rangeEl = card.querySelector(`#range-${bin.id}`);
+        if (rangeEl) {
+            rangeEl.oninput = function() {
+                document.getElementById(`val-${bin.id}`).innerText = this.value + "%";
+            };
+        }
+        
+        list.appendChild(card);
+    });
+
+    console.log("Sidebar loaded successfully.");
+}
+
+async function updateBin(id) {
+    const level = document.getElementById(`range-${id}`).value;
+    const formData = new FormData();
+    formData.append('action', 'update');
+    formData.append('bin_id', id);
+    formData.append('fill_level', level);
+
+    await fetch('manage_bins.php', { method: 'POST', body: formData });
+    refreshData(); // This pulls the fresh data and redraws the map
+}
+
+function updateLogistics(bins) {
+    // Clear existing markers
+    markers.forEach(m => m.setMap(null));
+    markers = [];
+    
+    // Clear existing directions
+    if (directionsRenderer) {
+        directionsRenderer.setDirections({routes: []}); 
+    }
+
+    const activeBins = bins.filter(b => b.fill_level > 50);
+    
+    // Update dashboard metrics
+    updateDashboardMetrics(bins);
+
+    // Always draw markers for active bins (if map is available)
+    if (map && window.google && window.google.maps) {
+        activeBins.forEach(bin => {
+            let color = 'http://maps.google.com/mapfiles/ms/icons/green-dot.png';
+            if (bin.fill_level >= 81) color = 'http://maps.google.com/mapfiles/ms/icons/red-dot.png';
+            else if (bin.fill_level >= 51) color = 'http://maps.google.com/mapfiles/ms/icons/yellow-dot.png';
+
+            try {
+                const marker = new google.maps.Marker({
+                    position: { lat: parseFloat(bin.lat), lng: parseFloat(bin.lng) },
+                    map: map, 
+                    icon: color, 
+                    title: bin.location_name
+                });
+                markers.push(marker);
+            } catch (error) {
+                console.error('Error creating marker for bin:', bin.location_name, error);
+            }
+        });
+    }
+
+    if (activeBins.length < 2) {
+        document.getElementById('capacity').innerText = "Standby";
+        document.getElementById('dist').innerText = "-- km";
+        document.getElementById('co2').innerText = "0.00 kg";
+        
+        // Reset progress bars
+        document.getElementById('dist-progress').style.width = '0%';
+        document.getElementById('co2-progress').style.width = '0%';
+        return;
+    }
+
+    // Only try directions if we have Google Maps loaded
+    if (!directionsService || !window.google || !window.google.maps) {
+        console.log('Directions service not available, showing estimated stats');
+        // Show estimated stats without directions
+        const estimatedDistance = (activeBins.length * 2.5).toFixed(2);
+        const estimatedCO2 = (estimatedDistance * 0.25).toFixed(2);
+        
+        document.getElementById('dist').innerText = estimatedDistance + " km";
+        document.getElementById('co2').innerText = estimatedCO2 + " kg";
+        document.getElementById('capacity').innerText = estimatedDistance > 20 ? "OVERLOAD" : "OPTIMIZED";
+        
+        // Update progress bars
+        updateProgressBars(parseFloat(estimatedDistance), parseFloat(estimatedCO2));
+        return;
+    }
+
+    const waypoints = activeBins.slice(1, -1).map(b => ({
+        location: new google.maps.LatLng(parseFloat(b.lat), parseFloat(b.lng)), 
+        stopover: true
+    }));
+
+    directionsService.route({
+        origin: new google.maps.LatLng(parseFloat(activeBins[0].lat), parseFloat(activeBins[0].lng)),
+        destination: new google.maps.LatLng(parseFloat(activeBins[activeBins.length - 1].lat), parseFloat(activeBins[activeBins.length - 1].lng)),
+        waypoints: waypoints,
+        optimizeWaypoints: true,
+        travelMode: google.maps.TravelMode.DRIVING
+    }, (result, status) => {
+        if (status === google.maps.DirectionsStatus.OK) {
+            directionsRenderer.setDirections(result);
+            const route = result.routes[0];
+            let totalDist = 0;
+            route.legs.forEach(leg => { totalDist += leg.distance.value; });
+            
+            const distKm = (totalDist / 1000).toFixed(2);
+            const co2Saved = (distKm * 0.25).toFixed(2);
+            
+            document.getElementById('dist').innerText = distKm + " km";
+            document.getElementById('co2').innerText = co2Saved + " kg";
+            document.getElementById('capacity').innerText = distKm > 20 ? "OVERLOAD" : "OPTIMIZED";
+
+            // Update progress bars with animation
+            updateProgressBars(parseFloat(distKm), parseFloat(co2Saved));
+
+            // Add Truck at Start
+            try {
+                const truck = new google.maps.Marker({
+                    position: route.legs[0].start_location,
+                    map: map,
+                    icon: { 
+                        url: 'https://cdn-icons-png.flaticon.com/512/2830/2830305.png', 
+                        scaledSize: new google.maps.Size(40, 40) 
+                    },
+                    title: 'Collection Truck'
+                });
+                markers.push(truck);
+            } catch (error) {
+                console.error('Error creating truck marker:', error);
+            }
+        } else {
+            console.error('Directions request failed:', status);
+            // Show estimated stats if directions fail
+            const estimatedDistance = (activeBins.length * 2.5).toFixed(2);
+            const estimatedCO2 = (estimatedDistance * 0.25).toFixed(2);
+            
+            document.getElementById('dist').innerText = estimatedDistance + " km (est)";
+            document.getElementById('co2').innerText = estimatedCO2 + " kg (est)";
+            document.getElementById('capacity').innerText = "ESTIMATED";
+            
+            // Update progress bars
+            updateProgressBars(parseFloat(estimatedDistance), parseFloat(estimatedCO2));
+        }
+    });
+}
+
+// Helper function to update progress bars
+function updateProgressBars(distance, co2) {
+    // Animate progress bars (max values for scaling)
+    const maxDistance = 30; // km
+    const maxCO2 = 7.5; // kg
+    
+    setTimeout(() => {
+        const distancePercent = Math.min((distance / maxDistance) * 100, 100);
+        const co2Percent = Math.min((co2 / maxCO2) * 100, 100);
+        
+        document.getElementById('dist-progress').style.width = distancePercent + '%';
+        document.getElementById('co2-progress').style.width = co2Percent + '%';
+    }, 200);
+}
+
+// CREATE: Add a new bin to the map and database
+async function createBin() {
+    const nameInput = document.getElementById('new-name');
+    const latInput = document.getElementById('new-lat');
+    const lngInput = document.getElementById('new-lng');
+    
+    const name = nameInput.value.trim();
+    const lat = latInput.value.trim();
+    const lng = lngInput.value.trim();
+
+    // Validation
+    if (!name || !lat || !lng) {
+        showNotification('❌ Please fill in all fields', 'error');
+        return;
+    }
+    
+    // Validate coordinates
+    const latNum = parseFloat(lat);
+    const lngNum = parseFloat(lng);
+    
+    if (isNaN(latNum) || isNaN(lngNum)) {
+        showNotification('❌ Please enter valid coordinates', 'error');
+        return;
+    }
+    
+    if (latNum < -90 || latNum > 90 || lngNum < -180 || lngNum > 180) {
+        showNotification('❌ Coordinates out of valid range', 'error');
+        return;
+    }
+
+    try {
+        // Show loading state
+        const addBtn = document.querySelector('.add-btn');
+        const originalText = addBtn.innerHTML;
+        addBtn.innerHTML = '<span>⏳</span> Adding...';
+        addBtn.disabled = true;
+
+        const formData = new FormData();
+        formData.append('action', 'create');
+        formData.append('name', name);
+        formData.append('lat', lat);
+        formData.append('lng', lng);
+
+        const response = await fetch('manage_bins.php', { method: 'POST', body: formData });
+        const result = await response.json();
+        
+        if (result.status === 'success') {
+            // Clear inputs
+            nameInput.value = '';
+            latInput.value = '';
+            lngInput.value = '';
+            
+            // Refresh data
+            refreshData();
+            
+            showNotification(`✅ "${name}" added successfully!`, 'success');
+        } else {
+            throw new Error(result.message || 'Failed to add location');
+        }
+    } catch (error) {
+        console.error('Error creating bin:', error);
+        showNotification('❌ Failed to add location. Please try again.', 'error');
+    } finally {
+        // Restore button
+        const addBtn = document.querySelector('.add-btn');
+        addBtn.innerHTML = '<span>➕</span> Add Collection Point';
+        addBtn.disabled = false;
+    }
+}
+
+// DELETE: Remove a bin
+async function deleteBin(id) {
+    // Get bin name for confirmation
+    const binCard = document.querySelector(`#range-${id}`).closest('.bin-card');
+    const binName = binCard.querySelector('.bin-name').textContent;
+    
+    if (!confirm(`Are you sure you want to delete "${binName}"?\n\nThis action cannot be undone.`)) return;
+
+    try {
+        const formData = new FormData();
+        formData.append('action', 'delete');
+        formData.append('bin_id', id);
+
+        const response = await fetch('manage_bins.php', { method: 'POST', body: formData });
+        const result = await response.json();
+        
+        if (result.status === 'success') {
+            refreshData();
+            showNotification(`🗑️ "${binName}" deleted successfully`, 'success');
+        } else {
+            throw new Error(result.message || 'Failed to delete location');
+        }
+    } catch (error) {
+        console.error('Error deleting bin:', error);
+        showNotification('❌ Failed to delete location. Please try again.', 'error');
+    }
+}
+
+// Note: updateBin function is already defined above - this duplicate has been removed
+
+// Load Google Maps API dynamically
+async function loadGoogleMapsAPI() {
+    return new Promise((resolve, reject) => {
+        if (window.google && window.google.maps && window.google.maps.Map) {
+            console.log('Google Maps already loaded');
+            resolve();
+            return;
+        }
+        
+        console.log('Loading Google Maps API with key:', googleMapsApiKey.substring(0, 20) + '...');
+        
+        // Create a unique callback name
+        const callbackName = 'initGoogleMapsCallback_' + Date.now();
+        
+        // Set up the callback
+        window[callbackName] = () => {
+            console.log('Google Maps API callback triggered');
+            
+            // Wait a bit for everything to be ready
+            setTimeout(() => {
+                if (window.google && window.google.maps && window.google.maps.Map) {
+                    console.log('Google Maps API loaded successfully');
+                    delete window[callbackName]; // Clean up
+                    resolve();
+                } else {
+                    console.error('Google Maps callback triggered but API not fully loaded');
+                    delete window[callbackName]; // Clean up
+                    reject(new Error('Google Maps API not fully loaded after callback'));
+                }
+            }, 100);
+        };
+        
+        const script = document.createElement('script');
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${googleMapsApiKey}&callback=${callbackName}&libraries=geometry`;
+        script.async = true;
+        script.defer = true;
+        script.onerror = (error) => {
+            console.error('Failed to load Google Maps API script:', error);
+            delete window[callbackName]; // Clean up
+            reject(new Error('Failed to load Google Maps API script - check your API key and internet connection'));
+        };
+        
+        // Add timeout in case the callback never fires
+        setTimeout(() => {
+            if (window[callbackName]) {
+                console.error('Google Maps API loading timeout');
+                delete window[callbackName];
+                reject(new Error('Google Maps API loading timeout - check your API key and enabled APIs'));
+            }
+        }, 15000); // 15 second timeout
+        
+        console.log('Adding Google Maps script to page...');
+        document.head.appendChild(script);
+    });
+}
+
+// Initialize when page loads
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        // Load saved theme first
+        loadSavedTheme();
+        // First check authentication
+        const isAuthenticated = await checkAuthentication();
+        if (!isAuthenticated) return; // Will redirect to login
+        
+        // Initialize UI with user info
+        initializeUI();
+        
+        // Load config
+        await loadConfig();
+        
+        console.log('Starting Google Maps initialization...');
+        
+        // IMPORTANT: Show the main app FIRST so the map container has dimensions
+        document.getElementById('loadingScreen').style.display = 'none';
+        document.getElementById('mainApp').style.display = 'flex';
+        
+        // Wait a moment for the layout to render, then force proper sizing
+        await new Promise(resolve => setTimeout(resolve, 200));
+        
+        // Force initial sizing before map creation
+        const sidePanel = document.getElementById("side-panel");
+        const sidePanelWidth = sidePanel ? sidePanel.offsetWidth : 350;
+        const availableWidth = window.innerWidth - sidePanelWidth;
+        const availableHeight = window.innerHeight;
+        
+        const mainView = document.getElementById("main-view");
+        const mapContainer = document.getElementById("map");
+        
+        if (mainView && mapContainer) {
+            mainView.style.width = availableWidth + 'px';
+            mainView.style.height = availableHeight + 'px';
+            mapContainer.style.width = availableWidth + 'px';
+            mapContainer.style.height = availableHeight + 'px';
+            console.log('Pre-map sizing applied:', { width: availableWidth, height: availableHeight });
+        }
+        
+        // Try to load Google Maps API
+        try {
+            await loadGoogleMapsAPI();
+            console.log('Google Maps API loaded, initializing map...');
+            await initMap();
+            console.log('Map initialized successfully');
+            showNotification('🗺️ EcoMate system loaded successfully!', 'success');
+        } catch (mapError) {
+            console.error('Google Maps failed to load:', mapError);
+            // Show error in map area but continue with app
+            document.getElementById('map').innerHTML = `
+                <div style="display: flex; align-items: center; justify-content: center; height: 100%; background: #f8f9fa; color: #666; text-align: center; padding: 20px;">
+                    <div>
+                        <h3>⚠️ Map Loading Failed</h3>
+                        <p>Error: ${mapError.message}</p>
+                        <p style="font-size: 12px;">The API key works (test-maps.html loads), but there's an initialization issue.</p>
+                        <button onclick="window.location.reload()" style="margin-top: 10px; padding: 8px 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">Retry</button>
+                    </div>
+                </div>
+            `;
+            // Still load the data
+            refreshData();
+            showNotification('⚠️ Map failed to load, but system is functional', 'error');
+        }
+        
+    } catch (error) {
+        console.error('Failed to initialize app:', error);
+        document.getElementById('loadingScreen').innerHTML = `
+            <div style="text-align: center;">
+                <h2 style="color: #dc3545; margin-bottom: 10px;">Error</h2>
+                <p style="color: #666;">Failed to load the application: ${error.message}</p>
+                <p style="color: #999; font-size: 12px;">Check the browser console for more details.</p>
+                <button onclick="window.location.reload()" style="margin-top: 20px; padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">Refresh</button>
+            </div>
+        `;
+    }
+});
+</script>
+</body>
+</html>

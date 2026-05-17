@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoMate Command Center (No Map)</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; height: 100vh; overflow: hidden; }
+        
+        /* Side Panel for CRUD */
+        #side-panel { width: 350px; background: #fff; border-right: 1px solid #ddd; display: flex; flex-direction: column; z-index: 20; box-shadow: 2px 0 10px rgba(0,0,0,0.1); }
+        .panel-header { background: #002d5e; color: white; padding: 20px; font-weight: bold; font-size: 18px; }
+        #bin-list { flex: 1; overflow-y: auto; padding: 15px; }
+        
+        .bin-card { background: #f9f9f9; border: 1px solid #eee; border-radius: 8px; padding: 12px; margin-bottom: 12px; transition: 0.3s; }
+        .bin-card:hover { border-color: #00897b; }
+        .bin-name { font-weight: bold; color: #333; margin-bottom: 8px; display: block; }
+        .controls { display: flex; align-items: center; gap: 10px; }
+        
+        input[type="range"] { flex: 1; cursor: pointer; accent-color: #00897b; }
+        .update-btn { background: #00897b; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; }
+
+        /* Map & Dashboard */
+        #main-view { flex: 1; position: relative; background: #f8f9fa; display: flex; align-items: center; justify-content: center; }
+        #map-placeholder { 
+            text-align: center; 
+            color: #666; 
+            padding: 40px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        #dashboard {
+            position: absolute; top: 20px; right: 20px; z-index: 10;
+            background: rgba(255, 255, 255, 0.95); padding: 15px; border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2); width: 220px;
+        }
+        .stat-item { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; }
+        .value { font-weight: bold; color: #002d5e; }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loadingScreen" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #f8f9fa; display: flex; align-items: center; justify-content: center; z-index: 1000;">
+        <div style="text-align: center;">
+            <div style="border: 4px solid #f3f3f3; border-top: 4px solid #00897b; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 0 auto 20px;"></div>
+            <h2 style="color: #002d5e; margin-bottom: 10px;">EcoMate</h2>
+            <p style="color: #666;">Loading Command Center...</p>
+        </div>
+    </div>
+
+    <!-- Main Application (hidden initially) -->
+    <div id="mainApp" style="display: none;">
+
+    <div id="side-panel">
+        <div style="padding: 15px; border-bottom: 1px solid #ddd; background: #f0f4f8;">
+            <div style="display:flex; gap:10px; margin-bottom:10px; align-items:center; justify-content: space-between;">
+                <div id="authUserText" style="color:#002d5e;font-weight:bold;font-size:13px;">Signed in as: --</div>
+                <button onclick="logoutNow()" id="logoutBtn" style="background:#dc3545;color:white;border:none;padding:8px 12px;border-radius:6px;cursor:pointer;">Logout</button>
+            </div>
+
+            <div id="crudPanel" style="display:none;">
+                <input type="text" id="new-name" placeholder="Bin Name" style="width: 100%; margin-bottom: 5px;">
+                <div style="display:flex; gap:5px;">
+                    <input type="text" id="new-lat" placeholder="Lat" style="width:50%;">
+                    <input type="text" id="new-lng" placeholder="Lng" style="width:50%;">
+                </div>
+                <button onclick="createBin()" style="width: 100%; margin-top: 10px; background: #002d5e; color: white; border: none; padding: 8px; cursor:pointer;">+ Add New Bin</button>
+            </div>
+        </div>
+        <div class="panel-header">EcoMate Controller</div>
+        <div id="bin-list">
+            <p style="color: #666; font-size: 14px;">Connecting to System A...</p>
+        </div>
+    </div>
+
+    <div id="main-view">
+        <div id="dashboard">
+            <div class="stat-item"><span>Distance:</span> <span id="dist" class="value">-- km</span></div>
+            <div class="stat-item"><span>CO2 Saved:</span> <span id="co2" class="value">0.00 kg</span></div>
+            <div class="stat-item"><span>Status:</span> <span id="capacity" class="value">Syncing...</span></div>
+        </div>
+        <div id="map-placeholder">
+            <h2>Map View</h2>
+            <p>Google Maps would be displayed here</p>
+            <p style="font-size: 12px; color: #999;">This is a test version without map integration</p>
+        </div>
+    </div>
+
+    </div> <!-- End mainApp -->
+
+    <script>
+        let currentUser = null;
+
+        // Check authentication before initializing the app
+        async function checkAuthentication() {
+            try {
+                console.log('Checking authentication...');
+                const response = await fetch('whoami.php');
+                
+                if (!response.ok) {
+                    console.log('Auth check failed - response not ok:', response.status);
+                    window.location.replace('login.html');
+                    return false;
+                }
+                
+                const data = await response.json();
+                console.log('Auth response:', data);
+                
+                if (!data || !data.authenticated) {
+                    console.log('Not authenticated, redirecting to login');
+                    window.location.replace('login.html');
+                    return false;
+                }
+                
+                currentUser = data.user;
+                console.log('Authenticated as:', currentUser);
+                return true;
+            } catch (error) {
+                console.error('Auth check failed:', error);
+                window.location.replace('login.html');
+                return false;
+            }
+        }
+
+        async function logoutNow() {
+            try {
+                await fetch('logout.php', { method: 'POST' });
+            } catch (error) {
+                console.error('Logout error:', error);
+            }
+            window.location.replace('login.html');
+        }
+
+        function initializeUI() {
+            const authText = document.getElementById('authUserText');
+            authText.textContent = `Signed in as: ${currentUser.username} (${currentUser.role})`;
+            
+            const crudPanel = document.getElementById('crudPanel');
+            if (currentUser.role === 'admin') {
+                crudPanel.style.display = 'block';
+            } else {
+                crudPanel.style.display = 'none';
+            }
+        }
+
+        async function refreshData() {
+            console.log("Fetching fresh data from get_bins.php...");
+            try {
+                const response = await fetch('get_bins.php');
+                const data = await response.json();
+                console.log("Data received:", data);
+
+                if (!data || data.status !== 'success') {
+                    throw new Error(data?.message || 'Failed to fetch bins');
+                }
+
+                const bins = data.bins || [];
+
+                if (bins.length === 0) {
+                    document.getElementById('bin-list').innerHTML = "<p>No bins found in database.</p>";
+                    return;
+                }
+
+                loadAdminControls(bins);
+                updateStats(bins);
+            } catch (err) {
+                console.error("Critical Error fetching bins:", err);
+                document.getElementById('bin-list').innerHTML = "<p style='color:red'>Connection Failed</p>";
+            }
+        }
+
+        function loadAdminControls(bins) {
+            const list = document.getElementById('bin-list');
+            list.innerHTML = "";
+
+            const isAdmin = currentUser && currentUser.role === 'admin';
+
+            bins.forEach(bin => {
+                const card = document.createElement('div');
+                card.className = 'bin-card';
+
+                const canEdit = isAdmin;
+                const deleteBtn = canEdit
+                    ? `<button onclick="deleteBin(${bin.id})" style="background:none; border:none; color:red; cursor:pointer; font-size:16px;">&times;</button>`
+                    : `<span style="color:#bbb;font-size:16px;">×</span>`;
+
+                const updateBtn = canEdit
+                    ? `<button class="update-btn" onclick="updateBin(${bin.id})">Update</button>`
+                    : `<button class="update-btn" style="opacity:0.4; cursor:not-allowed;" disabled>Update</button>`;
+
+                card.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span class="bin-name">${bin.location_name}</span>
+                        ${deleteBtn}
+                    </div>
+                    <div class="controls">
+                        <input type="range" id="range-${bin.id}" min="0" max="100" value="${bin.fill_level}" ${canEdit ? '' : 'disabled'}>
+                        <span id="val-${bin.id}" style="font-size:12px;">${bin.fill_level}%</span>
+                        ${updateBtn}
+                    </div>
+                `;
+
+                const rangeEl = card.querySelector(`#range-${bin.id}`);
+                if (rangeEl) {
+                    rangeEl.oninput = function() {
+                        document.getElementById(`val-${bin.id}`).innerText = this.value + "%";
+                    };
+                }
+                
+                list.appendChild(card);
+            });
+
+            console.log("Sidebar loaded successfully.");
+        }
+
+        function updateStats(bins) {
+            const activeBins = bins.filter(b => b.fill_level > 50);
+            
+            if (activeBins.length < 2) {
+                document.getElementById('capacity').innerText = "Standby";
+                document.getElementById('dist').innerText = "-- km";
+                document.getElementById('co2').innerText = "0.00 kg";
+                return;
+            }
+
+            // Simulate distance calculation
+            const estimatedDistance = (activeBins.length * 2.5).toFixed(2);
+            document.getElementById('dist').innerText = estimatedDistance + " km";
+            document.getElementById('co2').innerText = (estimatedDistance * 0.25).toFixed(2) + " kg";
+            document.getElementById('capacity').innerText = estimatedDistance > 20 ? "OVERLOAD" : "OPTIMIZED";
+        }
+
+        async function updateBin(id) {
+            const level = document.getElementById(`range-${id}`).value;
+            const formData = new FormData();
+            formData.append('action', 'update');
+            formData.append('bin_id', id);
+            formData.append('fill_level', level);
+
+            await fetch('manage_bins.php', { method: 'POST', body: formData });
+            refreshData();
+        }
+
+        async function createBin() {
+            const name = document.getElementById('new-name').value;
+            const lat = document.getElementById('new-lat').value;
+            const lng = document.getElementById('new-lng').value;
+
+            if (!name || !lat || !lng) return alert("Please fill all fields");
+
+            const formData = new FormData();
+            formData.append('action', 'create');
+            formData.append('name', name);
+            formData.append('lat', lat);
+            formData.append('lng', lng);
+
+            await fetch('manage_bins.php', { method: 'POST', body: formData });
+            
+            document.getElementById('new-name').value = '';
+            document.getElementById('new-lat').value = '';
+            document.getElementById('new-lng').value = '';
+            refreshData();
+        }
+
+        async function deleteBin(id) {
+            if (!confirm("Are you sure you want to delete this bin?")) return;
+
+            const formData = new FormData();
+            formData.append('action', 'delete');
+            formData.append('bin_id', id);
+
+            await fetch('manage_bins.php', { method: 'POST', body: formData });
+            refreshData();
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const isAuthenticated = await checkAuthentication();
+                if (!isAuthenticated) return;
+                
+                initializeUI();
+                await refreshData();
+                
+                document.getElementById('loadingScreen').style.display = 'none';
+                document.getElementById('mainApp').style.display = 'flex';
+                
+            } catch (error) {
+                console.error('Failed to initialize app:', error);
+                document.getElementById('loadingScreen').innerHTML = `
+                    <div style="text-align: center;">
+                        <h2 style="color: #dc3545; margin-bottom: 10px;">Error</h2>
+                        <p style="color: #666;">Failed to load the application: ${error.message}</p>
+                        <button onclick="window.location.reload()" style="margin-top: 20px; padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">Refresh</button>
+                    </div>
+                `;
+            }
+        });
+    </script>
+</body>
+</html>
